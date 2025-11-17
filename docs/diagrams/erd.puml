@@ -1,0 +1,121 @@
+@startuml Database ERD - IoT Measurement Platform
+
+!define primary_key(x) <b><color:red>PK</color> x</b>
+!define foreign_key(x) <b><color:blue>FK</color> x</b>
+!define unique(x) <b><color:green>UK</color> x</b>
+
+entity "users" as users {
+  primary_key(id): INTEGER
+  --
+  unique(username): VARCHAR(50)
+  unique(email): VARCHAR(100)
+  password_hash: VARCHAR(255)
+  is_admin: BOOLEAN
+  --
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+}
+
+entity "series" as series {
+  primary_key(id): INTEGER
+  --
+  name: VARCHAR(100)
+  description: TEXT
+  unit: VARCHAR(20)
+  min_value: FLOAT
+  max_value: FLOAT
+  color: VARCHAR(7)
+  icon: VARCHAR(50)
+  --
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+}
+
+entity "measurements" as measurements {
+  primary_key(id): INTEGER
+  --
+  foreign_key(series_id): INTEGER
+  foreign_key(sensor_id): INTEGER
+  value: FLOAT
+  timestamp: TIMESTAMP
+  --
+  created_at: TIMESTAMP
+}
+
+entity "sensors" as sensors {
+  primary_key(id): INTEGER
+  --
+  foreign_key(series_id): INTEGER
+  name: VARCHAR(100)
+  unique(api_key): VARCHAR(255)
+  is_active: BOOLEAN
+  last_seen: TIMESTAMP
+  --
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+}
+
+' Relationships
+series ||--o{ measurements : "has many"
+measurements }o--|| series : "belongs to"
+
+sensors }o--|| series : "writes to"
+series ||--o{ sensors : "has many"
+
+sensors ||--o{ measurements : "creates"
+measurements }o--o| sensors : "created by\n(nullable)"
+
+note right of users
+  **Roles:**
+  - is_admin = true → Admin (full CRUD)
+  - is_admin = false → Reader (view only)
+
+  **Password:**
+  - Hashed with bcrypt
+  - Never stored in plaintext
+end note
+
+note right of series
+  **Purpose:**
+  - Groups measurements by type
+  - e.g., "Kitchen Energy", "Living Room Temp"
+
+  **Validation:**
+  - min_value/max_value used to reject
+    measurements outside acceptable range
+
+  **Display:**
+  - color: hex code for chart line
+  - icon: optional UI enhancement
+end note
+
+note right of measurements
+  **Core Data:**
+  - value: the actual measurement
+  - timestamp: when measured
+  - created_at: when saved to DB
+
+  **Source:**
+  - sensor_id NULL → manual entry by admin
+  - sensor_id set → from autonomous sensor
+
+  **Indexes:**
+  - (series_id, timestamp) for efficient queries
+  - timestamp for time-range filtering
+end note
+
+note right of sensors
+  **Optional Feature:**
+  - Autonomous devices sending data
+  - Authenticated via api_key
+
+  **Validation:**
+  - Only registered sensors can submit data
+  - Each sensor writes to ONE series
+
+  **Status:**
+  - is_active: can be disabled by admin
+  - last_seen: monitoring sensor health
+end note
+
+@enduml

@@ -1,0 +1,36 @@
+Wymagania zaliczenia
+Poniżej zamieszczono sugerowany harmonogram realizacji projektu. 
+
+Tygodnie 1 - 2:
+
+Zaprojektuj architekturę aplikacji, tj.:
+
+Podejmij decyzję o tym, które funkcjonalności będą realizowane po stronie frontendu, a które po stronie backendu.
+Dokonaj przeglądu dostępnych technologii i dokonaj wyboru, które z nich wykorzystasz do realizacji projektu (back & front). Dotyczy także wykorzystywanych bibliotek. 
+Zaprojektuj schemat bazy danych.
+Zaprojektuj planowany interfejs użytkownika aplikacji (przygotuj szkice/makiety, które ułatwią wyobrażenie sobie planowanych interakcji).
+Zaprojektuj REST API pozwalające na implementację zakładanych funkcjonalności.
+Tygodnie 3 – 4:
+
+Zaimplementuj backend aplikacji:
+
+Zaimplementuj zaprojektowane REST API.
+Testuj swoją implementację za pomocą narzędzi takich jak Postman czy curl.
+Zadbaj o zagadnienia dotyczące bezpieczeństwa aplikacji. 
+Tygodnie 5-6:
+
+Zaimplementuj frontend aplikacji:
+
+Wykorzystaj wybrany przez siebie framework JavaScript.
+Zadbaj o wygląd aplikacji poprzez odpowiednie wykorzystanie elementów języka HTML5 i kaskadowych arkuszy stylu (CSS3).
+Zadbaj o zagadnienia takie jak RWD oraz wykorzystanie WebAPIs.
+Zadbaj o poprawną współpracę z backendem.
+Tygodnie 7-8:
+
+Finalizuj projekt:
+
+Skonfiguruj serwer hostingowy dla aplikacji. 
+Załaduj aplikację na hosting oraz upewnij się, że wszystko nadal działa. Zdarza się, że na tym etapie ujawniają się błędy w postaci np. zahardcodowanych adresów serwera. 
+Przygotuj dokumentację projektu. 
+Upewnij się, że przygotowana paczka plików wraz z instrukcją pozwala na lokalne uruchomienie aplikacji.
+Przygotuj się do egzaminu.
