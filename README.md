@@ -43,9 +43,7 @@ docker-compose exec backend python scripts/add_test_data.py
 - Username: `admin`
 - Password: `admin123`
 
-**Reader User**:
-- Username: `reader`
-- Password: `reader123`
+**Note**: Unauthenticated users can view data without logging in. Only admins need to log in for CRUD operations.
 
 ### API Overview
 

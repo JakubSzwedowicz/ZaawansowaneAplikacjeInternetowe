@@ -23,7 +23,14 @@ export const dataService = {
 
   // Measurements
   async getMeasurements(params = {}) {
-    const response = await api.get('/measurements', { params });
+    const queryParams = new URLSearchParams();
+    if (params.series_ids) queryParams.append('series_ids', params.series_ids);
+    if (params.start_date) queryParams.append('start_date', params.start_date);
+    if (params.end_date) queryParams.append('end_date', params.end_date);
+    if (params.limit) queryParams.append('limit', params.limit);
+    
+    const queryString = queryParams.toString();
+    const response = await api.get(`/measurements${queryString ? '?' + queryString : ''}`);
     return response.data;
   },
 

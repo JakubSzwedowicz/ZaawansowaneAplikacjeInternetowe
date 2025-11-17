@@ -28,16 +28,9 @@ def add_test_data():
             password_hash=get_password_hash("admin123"),
             is_admin=True
         )
-        reader = User(
-            username="reader",
-            email="reader@example.com",
-            password_hash=get_password_hash("reader123"),
-            is_admin=False
-        )
         db.add(admin)
-        db.add(reader)
         db.commit()
-        print(f"✓ Created users: admin (admin123), reader (reader123)")
+        print(f"✓ Created admin user: admin (admin123)")
 
         # Create series
         print("\nCreating series...")
@@ -170,8 +163,8 @@ def add_test_data():
         print("Test data added successfully!")
         print("="*50)
         print("\nLogin credentials:")
-        print("  Admin:  username='admin',  password='admin123'")
-        print("  Reader: username='reader', password='reader123'")
+        print("  Admin: username='admin', password='admin123'")
+        print("  (Unauthenticated users can view data without login)")
         print("\nSensor API keys:")
         print(f"  Sensor 1: sensor_test_key_001")
         print(f"  Sensor 2: sensor_test_key_002")

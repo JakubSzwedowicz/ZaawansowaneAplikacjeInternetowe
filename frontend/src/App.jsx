@@ -5,6 +5,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/layout/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import ManagePage from './pages/ManagePage';
+import ProfilePage from './pages/ProfilePage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -23,19 +25,22 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
 
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Layout />
-                </ProtectedRoute>
-              }
-            >
+            {/* Public routes with Layout */}
+            <Route path="/" element={<Layout />}>
               <Route index element={<Dashboard />} />
-              <Route path="manage" element={<div style={{ padding: '2rem' }}>Manage page (Coming soon)</div>} />
-            </Route>
 
-            <Route path="*" element={<Navigate to="/" replace />} />
+              {/* Protected routes for admins only */}
+              <Route path="manage" element={
+                <ProtectedRoute>
+                  <ManagePage />
+                </ProtectedRoute>
+              } />
+              <Route path="profile" element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              } />
+            </Route>            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>

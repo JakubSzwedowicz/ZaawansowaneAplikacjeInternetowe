@@ -1,0 +1,8 @@
+node_modules
+frontend/node_modules
+backend/__pycache__
+backend/venv
+*.pyc
+.env
+.DS_Store
+postgres_data

@@ -64,14 +64,14 @@ class SensorSimulator:
             response = requests.post(url, json=data, headers=headers, timeout=5)
 
             if response.status_code == 201:
-                print(f"✓ [{self.name}] Sent: {value} (Status: {response.status_code})", flush=True)
+                print(f"✓ [{self.name}] Sent: {value} (Status: {response.status_code})")
                 return True
             else:
-                print(f"✗ [{self.name}] Error: {response.status_code} - {response.text}", flush=True)
+                print(f"✗ [{self.name}] Error: {response.status_code} - {response.text}")
                 return False
 
         except requests.exceptions.RequestException as e:
-            print(f"✗ [{self.name}] Connection error: {e}", flush=True)
+            print(f"✗ [{self.name}] Connection error: {e}")
             return False
 
     def run(self):
@@ -84,13 +84,13 @@ class SensorSimulator:
 
 def run_all_sensors():
     """Run all sensors (simple version - one at a time)"""
-    print("=" * 50, flush=True)
-    print("IoT Sensor Simulator", flush=True)
-    print("=" * 50, flush=True)
-    print(f"API: {API_BASE_URL}", flush=True)
-    print(f"Active sensors: {len(SENSORS)}", flush=True)
-    print("=" * 50, flush=True)
-    print("\nPress Ctrl+C to stop\n", flush=True)
+    print("=" * 50)
+    print("IoT Sensor Simulator")
+    print("=" * 50)
+    print(f"API: {API_BASE_URL}")
+    print(f"Active sensors: {len(SENSORS)}")
+    print("=" * 50)
+    print("\nPress Ctrl+C to stop\n")
 
     simulators = [SensorSimulator(config) for config in SENSORS]
 
@@ -104,7 +104,6 @@ def run_all_sensors():
 
     except KeyboardInterrupt:
         print("\n\nStopping simulator...")
-        print("Goodbye!")
 
 
 if __name__ == "__main__":

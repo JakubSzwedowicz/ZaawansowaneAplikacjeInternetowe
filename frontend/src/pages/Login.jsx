@@ -117,10 +117,27 @@ export default function Login() {
           </button>
         </form>
 
+        <button
+          onClick={() => navigate('/')}
+          style={{
+            width: '100%',
+            marginTop: '1rem',
+            padding: '0.75rem',
+            backgroundColor: 'white',
+            color: '#007bff',
+            border: '2px solid #007bff',
+            borderRadius: '4px',
+            fontSize: '1rem',
+            fontWeight: '500',
+            cursor: 'pointer'
+          }}
+        >
+          ← View Data Without Login
+        </button>
+
         <div style={{ marginTop: '1rem', textAlign: 'center', fontSize: '0.875rem', color: '#666' }}>
-          <p>Demo credentials:</p>
-          <p>Admin: admin / admin123</p>
-          <p>Reader: reader / reader123</p>
+          <p>Admin credentials:</p>
+          <p>admin / admin123</p>
         </div>
       </div>
     </div>

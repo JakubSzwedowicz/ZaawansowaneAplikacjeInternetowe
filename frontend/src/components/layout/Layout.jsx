@@ -2,7 +2,7 @@ import { Link, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 export default function Layout() {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, isAuthenticated } = useAuth();
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -21,7 +21,7 @@ export default function Layout() {
           <Link to="/" style={{ color: 'white', textDecoration: 'none' }}>
             Dashboard
           </Link>
-          {isAdmin && (
+          {isAuthenticated && isAdmin && (
             <Link to="/manage" style={{ color: 'white', textDecoration: 'none' }}>
               Manage
             </Link>
@@ -29,20 +29,39 @@ export default function Layout() {
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          <span>{user?.username} {isAdmin && '(Admin)'}</span>
-          <button
-            onClick={logout}
-            style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#555',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            Logout
-          </button>
+          {isAuthenticated ? (
+            <>
+              <Link to="/profile" style={{ color: 'white', textDecoration: 'none' }}>
+                {user?.username} {isAdmin && '(Admin)'}
+              </Link>
+              <button
+                onClick={logout}
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: '#555',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <Link
+              to="/login"
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#0066cc',
+                color: 'white',
+                textDecoration: 'none',
+                borderRadius: '4px'
+              }}
+            >
+              Login
+            </Link>
+          )}
         </div>
       </nav>
 

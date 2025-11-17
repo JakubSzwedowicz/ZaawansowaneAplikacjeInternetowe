@@ -16,3 +16,133 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white;
+    margin: 0;
+    padding: 0;
+  }
+
+  .dashboard-container {
+    padding: 0.5rem !important;
+  }
+
+  .dashboard-header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  table {
+    page-break-inside: auto;
+    font-size: 0.85rem;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  nav {
+    display: none !important;
+  }
+
+  /* Make chart fit on one page */
+  canvas {
+    max-width: 100% !important;
+    max-height: 400px !important;
+  }
+
+  h2 {
+    font-size: 1.2rem;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Add page breaks between sections */
+  .dashboard-container > div {
+    page-break-inside: avoid;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1rem;
+  }
+
+  .dashboard-header > div {
+    width: 100%;
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .dashboard-header button {
+    flex: 1;
+    font-size: 0.875rem;
+  }
+
+  .table-container {
+    font-size: 0.875rem;
+  }
+
+  table th, table td {
+    padding: 0.5rem !important;
+  }
+
+  nav {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+  }
+
+  nav > div {
+    width: 100%;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Make filter panel more compact on mobile */
+  .filter-panel label {
+    font-size: 0.875rem;
+  }
+
+  .filter-panel input,
+  .filter-panel select,
+  .filter-panel button {
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+  }
+
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    min-width: 600px;
+  }
+}

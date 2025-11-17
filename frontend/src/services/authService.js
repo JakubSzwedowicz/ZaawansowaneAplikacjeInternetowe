@@ -35,8 +35,21 @@ export const authService = {
   },
 
   getCurrentUser() {
-    const userStr = localStorage.getItem('user');
-    return userStr ? JSON.parse(userStr) : null;
+    const token = this.getToken();
+    const user = localStorage.getItem('user');
+    return token && user ? JSON.parse(user) : null;
+  },
+
+  async changePassword(currentPassword, newPassword) {
+    const response = await api.patch('/users/me/password', {
+      current_password: currentPassword,
+      new_password: newPassword
+    });
+    return response.data;
+  },
+
+  getToken() {
+    return localStorage.getItem('token');
   },
 
   isAuthenticated() {

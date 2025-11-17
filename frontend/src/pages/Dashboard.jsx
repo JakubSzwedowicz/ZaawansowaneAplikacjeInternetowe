@@ -1,31 +1,80 @@
 import { useState, useEffect } from 'react';
+import { format, subDays } from 'date-fns';
 import { dataService } from '../services/dataService';
+import MeasurementChart from '../components/charts/MeasurementChart';
+import MeasurementTable from '../components/tables/MeasurementTable';
+import FilterPanel from '../components/ui/FilterPanel';
+import { useAuth } from '../context/AuthContext';
 
 export default function Dashboard() {
+  const { isAdmin } = useAuth();
   const [series, setSeries] = useState([]);
   const [measurements, setMeasurements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedSeries, setSelectedSeries] = useState([]);
+  const [dateRange, setDateRange] = useState({
+    start: format(subDays(new Date(), 7), 'yyyy-MM-dd'),
+    end: format(new Date(), 'yyyy-MM-dd')
+  });
+  const [highlightedId, setHighlightedId] = useState(null);
 
   useEffect(() => {
-    loadData();
+    loadSeries();
   }, []);
 
-  const loadData = async () => {
+  useEffect(() => {
+    if (selectedSeries.length > 0) {
+      loadMeasurements();
+    }
+  }, [selectedSeries, dateRange]);
+
+  const loadSeries = async () => {
     try {
       setLoading(true);
-      const [seriesData, measurementsData] = await Promise.all([
-        dataService.getSeries(),
-        dataService.getMeasurements({ limit: 100 })
-      ]);
+      const seriesData = await dataService.getSeries();
       setSeries(seriesData);
-      setMeasurements(measurementsData);
+      // Auto-select all series initially
+      setSelectedSeries(seriesData.map(s => s.id));
     } catch (err) {
-      setError('Failed to load data');
+      setError('Failed to load series');
       console.error(err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadMeasurements = async () => {
+    try {
+      const params = {
+        series_ids: selectedSeries.join(','),
+        start_date: dateRange.start ? `${dateRange.start}T00:00:00` : undefined,
+        end_date: dateRange.end ? `${dateRange.end}T23:59:59` : undefined,
+        limit: 500
+      };
+      const measurementsData = await dataService.getMeasurements(params);
+      setMeasurements(measurementsData);
+    } catch (err) {
+      setError('Failed to load measurements');
+      console.error(err);
+    }
+  };
+
+  const handleRowClick = (id) => {
+    setHighlightedId(id === highlightedId ? null : id);
+  };
+
+  const handlePointClick = (id) => {
+    setHighlightedId(id === highlightedId ? null : id);
+    // Scroll to the row in the table
+    const element = document.querySelector(`tr[data-id="${id}"]`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   if (loading) {
@@ -36,58 +85,76 @@ export default function Dashboard() {
     return <div style={{ padding: '2rem', color: '#c00' }}>{error}</div>;
   }
 
-  return (
-    <div style={{ padding: '2rem' }}>
-      <h1>Dashboard</h1>
+  const filteredMeasurements = measurements.filter(m => 
+    selectedSeries.includes(m.series_id)
+  );
 
-      <div style={{ marginTop: '2rem' }}>
-        <h2>Series ({series.length})</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem', marginTop: '1rem' }}>
-          {series.map((s) => (
-            <div key={s.id} style={{
-              padding: '1rem',
-              border: '1px solid #ddd',
+  return (
+    <div className="dashboard-container" style={{ padding: '2rem' }}>
+      <div className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h1 style={{ margin: 0 }}>IoT Measurement Dashboard</h1>
+        <div className="no-print">
+          <button 
+            onClick={handlePrint}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: '#28a745',
+              color: 'white',
+              border: 'none',
               borderRadius: '4px',
-              borderLeft: `4px solid ${s.color}`
-            }}>
-              <h3 style={{ margin: '0 0 0.5rem' }}>{s.name}</h3>
-              <p style={{ margin: 0, fontSize: '0.875rem', color: '#666' }}>
-                Unit: {s.unit} | Range: {s.min_value}-{s.max_value}
-              </p>
-            </div>
-          ))}
+              cursor: 'pointer',
+              marginRight: '0.5rem'
+            }}
+          >
+            🖨️ Print View
+          </button>
+          {isAdmin && (
+            <button 
+              onClick={() => window.location.href = '/manage'}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#007bff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              ⚙️ Manage Data
+            </button>
+          )}
         </div>
       </div>
 
-      <div style={{ marginTop: '2rem' }}>
-        <h2>Recent Measurements ({measurements.length})</h2>
-        <div style={{ marginTop: '1rem', overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ backgroundColor: '#f5f5f5' }}>
-                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '2px solid #ddd' }}>ID</th>
-                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Series</th>
-                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Value</th>
-                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Timestamp</th>
-                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '2px solid #ddd' }}>Source</th>
-              </tr>
-            </thead>
-            <tbody>
-              {measurements.slice(0, 20).map((m) => {
-                const seriesObj = series.find(s => s.id === m.series_id);
-                return (
-                  <tr key={m.id} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: '0.75rem' }}>{m.id}</td>
-                    <td style={{ padding: '0.75rem' }}>{seriesObj?.name || m.series_id}</td>
-                    <td style={{ padding: '0.75rem' }}>{m.value} {seriesObj?.unit}</td>
-                    <td style={{ padding: '0.75rem' }}>{new Date(m.timestamp).toLocaleString()}</td>
-                    <td style={{ padding: '0.75rem' }}>{m.sensor_id ? `Sensor ${m.sensor_id}` : 'Manual'}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+      <div className="no-print">
+        <FilterPanel
+          series={series}
+          selectedSeries={selectedSeries}
+          onSeriesChange={setSelectedSeries}
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+        />
+      </div>
+
+      <div style={{ marginBottom: '2rem' }}>
+        <h2>Chart</h2>
+        <MeasurementChart
+          measurements={filteredMeasurements}
+          series={series}
+          selectedSeries={selectedSeries}
+          highlightedId={highlightedId}
+          onPointClick={handlePointClick}
+        />
+      </div>
+
+      <div>
+        <h2>Measurements ({filteredMeasurements.length})</h2>
+        <MeasurementTable
+          measurements={filteredMeasurements}
+          series={series}
+          highlightedId={highlightedId}
+          onRowClick={handleRowClick}
+        />
       </div>
     </div>
   );
