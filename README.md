@@ -108,14 +108,3 @@ alembic downgrade -1
 │       └── erd.puml         # Database ERD
 └── docker-compose.yml
 ```
-
-## Features
-
-- ✅ User authentication (JWT)
-- ✅ Role-based access (Admin/Reader)
-- ✅ CRUD operations for series and measurements
-- ✅ Data validation (min/max ranges)
-- ✅ Sensor API with API key authentication
-- ✅ Time-range filtering for measurements
-- ✅ Automatic Swagger documentation
-- ⏳ Frontend (React) - coming soon
