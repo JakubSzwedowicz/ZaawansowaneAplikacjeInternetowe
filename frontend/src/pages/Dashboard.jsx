@@ -33,12 +33,22 @@ export default function Dashboard() {
     try {
       setLoading(true);
       const seriesData = await dataService.getSeries();
-      setSeries(seriesData);
-      // Auto-select all series initially
-      setSelectedSeries(seriesData.map(s => s.id));
+      // Ensure seriesData is an array
+      if (Array.isArray(seriesData)) {
+        setSeries(seriesData);
+        // Auto-select all series initially
+        setSelectedSeries(seriesData.map(s => s.id));
+      } else {
+        console.error('Series data is not an array:', seriesData);
+        setSeries([]);
+        setSelectedSeries([]);
+        setError('Invalid data format received from server');
+      }
     } catch (err) {
       setError('Failed to load series');
       console.error(err);
+      setSeries([]);
+      setSelectedSeries([]);
     } finally {
       setLoading(false);
     }
@@ -53,10 +63,18 @@ export default function Dashboard() {
         limit: 500
       };
       const measurementsData = await dataService.getMeasurements(params);
-      setMeasurements(measurementsData);
+      // Ensure measurementsData is an array
+      if (Array.isArray(measurementsData)) {
+        setMeasurements(measurementsData);
+      } else {
+        console.error('Measurements data is not an array:', measurementsData);
+        setMeasurements([]);
+        setError('Invalid measurements data received from server');
+      }
     } catch (err) {
       setError('Failed to load measurements');
       console.error(err);
+      setMeasurements([]);
     }
   };
 
