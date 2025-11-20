@@ -1,8 +1,8 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'backend.railway.internal';
 
-console.log('API_BASE_URL:', API_BASE_URL); // Debug log
+console.log('API_BASE_URL:', API_BASE_URL);
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -11,7 +11,6 @@ const api = axios.create({
   },
 });
 
-// Add auth token to requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -20,7 +19,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle 401 errors (logout on auth failure)
 api.interceptors.response.use(
   (response) => response,
   (error) => {

@@ -32,10 +32,8 @@ export default function ManagePage() {
     try {
       setLoading(true);
       const seriesData = await dataService.getSeries();
-      // Ensure seriesData is an array
       if (Array.isArray(seriesData)) {
         setSeries(seriesData);
-        // Auto-select first series
         if (seriesData.length > 0 && !selectedSeriesId) {
           setSelectedSeriesId(seriesData[0].id);
         }
@@ -58,7 +56,6 @@ export default function ManagePage() {
         series_ids: seriesId.toString(),
         limit: measurementsLimit
       });
-      // Ensure measurementsData is an array
       if (Array.isArray(measurementsData)) {
         setMeasurements(measurementsData);
       } else {
@@ -80,7 +77,7 @@ export default function ManagePage() {
     try {
       await dataService.deleteSeries(id);
       await loadSeries();
-      // If deleted series was selected, select another
+      // If deleted series was selected then select another
       if (selectedSeriesId === id && series.length > 1) {
         const otherSeries = series.find(s => s.id !== id);
         setSelectedSeriesId(otherSeries?.id || null);

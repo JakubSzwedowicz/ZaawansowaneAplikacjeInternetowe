@@ -1,6 +1,5 @@
 API_BASE_URL = "http://localhost:8000"
 
-# Sensor configurations (from test data)
 SENSORS = [
     {
         "id": 1,
@@ -10,7 +9,7 @@ SENSORS = [
         "type": "temperature",
         "min_value": 18,
         "max_value": 28,
-        "interval": 10  # seconds between readings
+        "interval": 10
     },
     {
         "id": 2,

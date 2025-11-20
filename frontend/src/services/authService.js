@@ -13,7 +13,6 @@ export const authService = {
     const { access_token } = response.data;
     localStorage.setItem('token', access_token);
 
-    // Get user info
     const userResponse = await api.get('/users/me');
     localStorage.setItem('user', JSON.stringify(userResponse.data));
 
