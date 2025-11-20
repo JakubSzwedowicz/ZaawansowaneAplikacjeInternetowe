@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'backend.railway.internal';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://backend-production-7047.up.railway.app/api';
 
 console.log('API_BASE_URL:', API_BASE_URL);
 
