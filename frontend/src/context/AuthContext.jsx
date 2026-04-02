@@ -29,7 +29,8 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     isAuthenticated: !!user,
-    isAdmin: user?.is_admin || false,
+    isAdmin: user?.role === 'admin',
+    isContributor: user?.role === 'contributor' || user?.role === 'admin',
     loading,
   };
 
@@ -38,8 +39,6 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
 };

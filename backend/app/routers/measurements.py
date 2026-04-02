@@ -7,108 +7,119 @@ from app.models.measurement import Measurement
 from app.models.series import Series
 from app.models.user import User
 from app.schemas.measurement import MeasurementCreate, MeasurementUpdate, MeasurementResponse
-from app.utils.dependencies import get_current_user, get_current_admin
+from app.utils.dependencies import get_current_user, get_current_admin, get_current_contributor
 
 router = APIRouter(prefix="/api/measurements", tags=["Measurements"])
+
+VALID_QUALITY = {"good", "uncertain", "bad"}
 
 
 @router.get("", response_model=List[MeasurementResponse])
 def get_measurements(
-    series_ids: Optional[str] = Query(None, description="Comma-separated series IDs"),
-    start_date: Optional[datetime] = Query(None, description="Start date filter"),
-    end_date: Optional[datetime] = Query(None, description="End date filter"),
+    series_ids: Optional[str] = Query(None),
+    start_date: Optional[datetime] = Query(None),
+    end_date: Optional[datetime] = Query(None),
+    q: Optional[str] = Query(None),
+    quality: Optional[str] = Query(None),
     limit: int = Query(1000, le=10000),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
-    """Get measurements with optional filters (public endpoint)"""
     query = db.query(Measurement)
 
     if series_ids:
-        series_id_list = [int(sid) for sid in series_ids.split(',')]
-        query = query.filter(Measurement.series_id.in_(series_id_list))
-
+        id_list = [int(sid) for sid in series_ids.split(",")]
+        query = query.filter(Measurement.series_id.in_(id_list))
     if start_date:
         query = query.filter(Measurement.timestamp >= start_date)
     if end_date:
         query = query.filter(Measurement.timestamp <= end_date)
+    if q:
+        query = query.filter(Measurement.note.ilike(f"%{q}%"))
+    if quality and quality in VALID_QUALITY:
+        query = query.filter(Measurement.quality == quality)
 
-    measurements = query.order_by(Measurement.timestamp.asc()).limit(limit).all()
-    return measurements
+    return query.order_by(Measurement.timestamp.asc()).limit(limit).all()
 
 
 @router.get("/{measurement_id}", response_model=MeasurementResponse)
 def get_measurement(measurement_id: int, db: Session = Depends(get_db)):
-    """Get a specific measurement by ID (public endpoint)"""
-    measurement = db.query(Measurement).filter(Measurement.id == measurement_id).first()
-    if not measurement:
+    m = db.query(Measurement).filter(Measurement.id == measurement_id).first()
+    if not m:
         raise HTTPException(status_code=404, detail="Measurement not found")
-    return measurement
+    return m
 
 
 @router.post("", response_model=MeasurementResponse, status_code=status.HTTP_201_CREATED)
 def create_measurement(
-    measurement_data: MeasurementCreate,
+    data: MeasurementCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin)
+    current_user: User = Depends(get_current_contributor),
 ):
-    """Create a new measurement (admin only)"""
-    series = db.query(Series).filter(Series.id == measurement_data.series_id).first()
+    series = db.query(Series).filter(Series.id == data.series_id).first()
     if not series:
         raise HTTPException(status_code=404, detail="Series not found")
-
-    if measurement_data.value < series.min_value or measurement_data.value > series.max_value:
+    if not current_user.is_admin and series.creator_id != current_user.id:
+        raise HTTPException(status_code=403, detail="You can only add measurements to your own series")
+    if data.value < series.min_value or data.value > series.max_value:
         raise HTTPException(
             status_code=400,
-            detail=f"Value {measurement_data.value} is outside the acceptable range [{series.min_value}, {series.max_value}] for series '{series.name}'"
+            detail=f"Value {data.value} is outside the acceptable range [{series.min_value}, {series.max_value}] for series '{series.name}'",
         )
+    if data.quality and data.quality not in VALID_QUALITY:
+        raise HTTPException(status_code=400, detail=f"Quality must be one of: {', '.join(VALID_QUALITY)}")
 
-    new_measurement = Measurement(**measurement_data.model_dump())
-    db.add(new_measurement)
+    measurement = Measurement(**data.model_dump())
+    db.add(measurement)
     db.commit()
-    db.refresh(new_measurement)
-    return new_measurement
+    db.refresh(measurement)
+    return measurement
 
 
 @router.put("/{measurement_id}", response_model=MeasurementResponse)
 def update_measurement(
     measurement_id: int,
-    measurement_data: MeasurementUpdate,
+    data: MeasurementUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin)
+    current_user: User = Depends(get_current_contributor),
 ):
-    """Update a measurement (admin only)"""
-    measurement = db.query(Measurement).filter(Measurement.id == measurement_id).first()
-    if not measurement:
+    m = db.query(Measurement).filter(Measurement.id == measurement_id).first()
+    if not m:
         raise HTTPException(status_code=404, detail="Measurement not found")
 
-    if measurement_data.value is not None:
-        series = db.query(Series).filter(Series.id == measurement.series_id).first()
-        if measurement_data.value < series.min_value or measurement_data.value > series.max_value:
+    series = db.query(Series).filter(Series.id == m.series_id).first()
+    if not current_user.is_admin and series.creator_id != current_user.id:
+        raise HTTPException(status_code=403, detail="You can only edit measurements in your own series")
+
+    if data.value is not None:
+        if data.value < series.min_value or data.value > series.max_value:
             raise HTTPException(
                 status_code=400,
-                detail=f"Value {measurement_data.value} is outside the acceptable range [{series.min_value}, {series.max_value}]"
+                detail=f"Value {data.value} is outside the acceptable range [{series.min_value}, {series.max_value}]",
             )
+    if data.quality and data.quality not in VALID_QUALITY:
+        raise HTTPException(status_code=400, detail=f"Quality must be one of: {', '.join(VALID_QUALITY)}")
 
-    update_data = measurement_data.model_dump(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(measurement, key, value)
-
+    for key, value in data.model_dump(exclude_unset=True).items():
+        setattr(m, key, value)
     db.commit()
-    db.refresh(measurement)
-    return measurement
+    db.refresh(m)
+    return m
 
 
 @router.delete("/{measurement_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_measurement(
     measurement_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin)
+    current_user: User = Depends(get_current_contributor),
 ):
-    """Delete a measurement (admin only)"""
-    measurement = db.query(Measurement).filter(Measurement.id == measurement_id).first()
-    if not measurement:
+    m = db.query(Measurement).filter(Measurement.id == measurement_id).first()
+    if not m:
         raise HTTPException(status_code=404, detail="Measurement not found")
 
-    db.delete(measurement)
+    series = db.query(Series).filter(Series.id == m.series_id).first()
+    if not current_user.is_admin and series.creator_id != current_user.id:
+        raise HTTPException(status_code=403, detail="You can only delete measurements in your own series")
+
+    db.delete(m)
     db.commit()
     return None

@@ -20,11 +20,7 @@ export const authService = {
   },
 
   async register(username, email, password) {
-    const response = await api.post('/auth/register', {
-      username,
-      email,
-      password,
-    });
+    const response = await api.post('/auth/register', { username, email, password });
     return response.data;
   },
 
@@ -42,7 +38,7 @@ export const authService = {
   async changePassword(currentPassword, newPassword) {
     const response = await api.patch('/users/me/password', {
       current_password: currentPassword,
-      new_password: newPassword
+      new_password: newPassword,
     });
     return response.data;
   },
@@ -57,6 +53,6 @@ export const authService = {
 
   isAdmin() {
     const user = this.getCurrentUser();
-    return user?.is_admin || false;
+    return user?.role === 'admin';
   },
 };

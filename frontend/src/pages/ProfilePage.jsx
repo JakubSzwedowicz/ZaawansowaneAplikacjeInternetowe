@@ -91,7 +91,7 @@ export default function ProfilePage() {
             <strong>Email:</strong> {user?.email}
           </div>
           <div>
-            <strong>Role:</strong> {user?.is_admin ? 'Administrator' : 'Reader'}
+            <strong>Role:</strong> {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Viewer'}
           </div>
         </div>
       </div>

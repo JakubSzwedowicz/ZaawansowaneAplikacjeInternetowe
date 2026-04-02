@@ -1,71 +1,65 @@
 import { Link, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 
 export default function Layout() {
-  const { user, logout, isAdmin, isAuthenticated } = useAuth();
+  const { user, logout, isAdmin, isContributor, isAuthenticated } = useAuth();
+  const { theme, setTheme, themes } = useTheme();
+
+  const themeLabels = { light: 'Light', dark: 'Dark', 'high-contrast': 'HC' };
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <nav style={{
-        backgroundColor: '#333',
-        color: 'white',
-        padding: '1rem 2rem',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-          <Link to="/" style={{ color: 'white', textDecoration: 'none', fontWeight: 'bold', fontSize: '1.25rem' }}>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
+
+      <nav className="site-nav" role="navigation" aria-label="Main navigation">
+        <div className="nav-links">
+          <Link to="/" style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
             IoT Platform
           </Link>
-          <Link to="/" style={{ color: 'white', textDecoration: 'none' }}>
-            Dashboard
-          </Link>
-          {isAuthenticated && isAdmin && (
-            <Link to="/manage" style={{ color: 'white', textDecoration: 'none' }}>
-              Manage
-            </Link>
-          )}
+          <Link to="/">Dashboard</Link>
+          <Link to="/browse">Browse</Link>
+          <Link to="/search">Search</Link>
+          {isContributor && <Link to="/my-series">My Series</Link>}
+          {isAdmin && <Link to="/admin">Admin</Link>}
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div className="nav-right">
+          <div className="theme-switcher" role="group" aria-label="Theme">
+            {themes.map(t => (
+              <button
+                key={t}
+                className={`theme-btn${theme === t ? ' active' : ''}`}
+                onClick={() => setTheme(t)}
+                aria-pressed={theme === t}
+                title={t}
+              >
+                {themeLabels[t]}
+              </button>
+            ))}
+          </div>
+
           {isAuthenticated ? (
             <>
-              <Link to="/profile" style={{ color: 'white', textDecoration: 'none' }}>
-                {user?.username} {isAdmin && '(Admin)'}
+              <Link to="/profile">
+                {user?.username}
+                {isAdmin && ' (Admin)'}
+                {!isAdmin && isContributor && ' (Contributor)'}
               </Link>
-              <button
-                onClick={logout}
-                style={{
-                  padding: '0.5rem 1rem',
-                  backgroundColor: '#555',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
+              <button className="btn btn-outline" onClick={logout} style={{ color: 'var(--nav-text)', borderColor: 'var(--nav-text)' }}>
                 Logout
               </button>
             </>
           ) : (
-            <Link
-              to="/login"
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#0066cc',
-                color: 'white',
-                textDecoration: 'none',
-                borderRadius: '4px'
-              }}
-            >
-              Login
-            </Link>
+            <>
+              <Link to="/login" className="btn btn-primary">Login</Link>
+              <Link to="/register" style={{ color: 'var(--nav-text)' }}>Register</Link>
+            </>
           )}
         </div>
       </nav>
 
-      <main style={{ flex: 1, backgroundColor: '#f9f9f9' }}>
+      <main id="main-content" style={{ flex: 1 }} tabIndex={-1}>
         <Outlet />
       </main>
     </div>

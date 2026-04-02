@@ -1,5 +1,86 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { dataService } from '../../services/dataService';
+
+function TagInput({ value, onChange }) {
+  const [input, setInput] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const containerRef = useRef(null);
+
+  const fetchSuggestions = async (q) => {
+    if (!q.trim()) { setSuggestions([]); return; }
+    try {
+      const tags = await dataService.getTags(q);
+      setSuggestions(tags.map(t => t.name).filter(n => !value.includes(n)));
+    } catch {
+      setSuggestions([]);
+    }
+  };
+
+  const addTag = (name) => {
+    const trimmed = name.trim();
+    if (trimmed && !value.includes(trimmed)) {
+      onChange([...value, trimmed]);
+    }
+    setInput('');
+    setSuggestions([]);
+    setShowSuggestions(false);
+  };
+
+  const removeTag = (name) => {
+    onChange(value.filter(t => t !== name));
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addTag(input);
+    } else if (e.key === 'Backspace' && !input && value.length > 0) {
+      removeTag(value[value.length - 1]);
+    }
+  };
+
+  return (
+    <div ref={containerRef} style={{ position: 'relative' }}>
+      <div className="tag-input-container" onClick={() => containerRef.current?.querySelector('input')?.focus()}>
+        {value.map(tag => (
+          <span key={tag} className="tag-chip">
+            {tag}
+            <button type="button" onClick={() => removeTag(tag)} aria-label={`Remove tag ${tag}`}>×</button>
+          </span>
+        ))}
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => {
+            setInput(e.target.value);
+            setShowSuggestions(true);
+            fetchSuggestions(e.target.value);
+          }}
+          onKeyDown={handleKeyDown}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+          placeholder={value.length === 0 ? 'Add tags...' : ''}
+          style={{ border: 'none', outline: 'none', background: 'transparent', color: 'var(--text)', fontSize: '0.9rem', flex: 1, minWidth: '80px' }}
+        />
+      </div>
+      {showSuggestions && suggestions.length > 0 && (
+        <ul className="tag-suggestions" role="listbox">
+          {suggestions.map(s => (
+            <li
+              key={s}
+              className="tag-suggestion-item"
+              role="option"
+              onMouseDown={() => addTag(s)}
+            >
+              {s}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export default function SeriesForm({ series, onSaved, onCancel }) {
   const [formData, setFormData] = useState({
@@ -8,10 +89,17 @@ export default function SeriesForm({ series, onSaved, onCancel }) {
     unit: '',
     min_value: 0,
     max_value: 100,
-    color: '#007bff'
+    color: '#007bff',
+    location_id: '',
+    tags: [],
   });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
+
+  const { data: locations = [] } = useQuery({
+    queryKey: ['locations'],
+    queryFn: dataService.getLocations,
+  });
 
   useEffect(() => {
     if (series) {
@@ -19,51 +107,55 @@ export default function SeriesForm({ series, onSaved, onCancel }) {
         name: series.name || '',
         description: series.description || '',
         unit: series.unit || '',
-        min_value: series.min_value || 0,
-        max_value: series.max_value || 100,
-        color: series.color || '#007bff'
+        min_value: series.min_value ?? 0,
+        max_value: series.max_value ?? 100,
+        color: series.color || '#007bff',
+        location_id: series.location_id || '',
+        tags: series.tags || [],
       });
     }
   }, [series]);
 
+  const flattenLocations = (nodes, depth = 0) => {
+    let result = [];
+    for (const node of nodes) {
+      result.push({ ...node, depth });
+      if (node.children?.length) {
+        result = result.concat(flattenLocations(node.children, depth + 1));
+      }
+    }
+    return result;
+  };
+
+  const flatLocations = flattenLocations(locations);
+
   const validate = () => {
-    const newErrors = {};
-    
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
-    }
-    
-    if (!formData.unit.trim()) {
-      newErrors.unit = 'Unit is required';
-    }
-    
+    const errs = {};
+    if (!formData.name.trim()) errs.name = 'Name is required';
+    if (!formData.unit.trim()) errs.unit = 'Unit is required';
     if (formData.min_value >= formData.max_value) {
-      newErrors.min_value = 'Min value must be less than max value';
-      newErrors.max_value = 'Max value must be greater than min value';
+      errs.min_value = 'Min must be less than max';
     }
-    
     if (!formData.color.match(/^#[0-9A-Fa-f]{6}$/)) {
-      newErrors.color = 'Color must be a valid hex color (e.g., #FF5733)';
+      errs.color = 'Color must be a valid hex color';
     }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validate()) {
-      return;
-    }
-    
+    if (!validate()) return;
     setSubmitting(true);
-    
     try {
+      const payload = {
+        ...formData,
+        location_id: formData.location_id ? parseInt(formData.location_id) : null,
+      };
       if (series) {
-        await dataService.updateSeries(series.id, formData);
+        await dataService.updateSeries(series.id, payload);
       } else {
-        await dataService.createSeries(formData);
+        await dataService.createSeries(payload);
       }
       onSaved();
     } catch (err) {
@@ -75,190 +167,84 @@ export default function SeriesForm({ series, onSaved, onCancel }) {
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'number' ? parseFloat(value) : value
-    }));
-    // Clear error for this field
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: undefined }));
-    }
+    setFormData(prev => ({ ...prev, [name]: type === 'number' ? parseFloat(value) : value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: undefined }));
   };
+
+  const fieldStyle = (err) => ({
+    width: '100%',
+    padding: '0.5rem',
+    border: `1px solid ${err ? 'var(--danger)' : 'var(--border)'}`,
+    borderRadius: '4px',
+    fontSize: '1rem',
+    backgroundColor: 'var(--input-bg)',
+    color: 'var(--text)',
+  });
 
   return (
     <form onSubmit={handleSubmit} style={{ maxWidth: '600px' }}>
       <div style={{ marginBottom: '1rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>
-          Name *
-        </label>
-        <input
-          type="text"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          style={{
-            width: '100%',
-            padding: '0.5rem',
-            border: errors.name ? '1px solid #dc3545' : '1px solid #ddd',
-            borderRadius: '4px',
-            fontSize: '1rem'
-          }}
-        />
-        {errors.name && <span style={{ color: '#dc3545', fontSize: '0.875rem' }}>{errors.name}</span>}
+        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Name *</label>
+        <input type="text" name="name" value={formData.name} onChange={handleChange} style={fieldStyle(errors.name)} />
+        {errors.name && <span style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{errors.name}</span>}
       </div>
 
       <div style={{ marginBottom: '1rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>
-          Description
-        </label>
-        <textarea
-          name="description"
-          value={formData.description}
-          onChange={handleChange}
-          rows="3"
-          style={{
-            width: '100%',
-            padding: '0.5rem',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-            fontSize: '1rem',
-            fontFamily: 'inherit'
-          }}
-        />
+        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Description</label>
+        <textarea name="description" value={formData.description} onChange={handleChange} rows="3" style={{ ...fieldStyle(false), fontFamily: 'inherit' }} />
       </div>
 
       <div style={{ marginBottom: '1rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>
-          Unit *
-        </label>
-        <input
-          type="text"
-          name="unit"
-          value={formData.unit}
-          onChange={handleChange}
-          placeholder="e.g., °C, kWh, %"
-          style={{
-            width: '100%',
-            padding: '0.5rem',
-            border: errors.unit ? '1px solid #dc3545' : '1px solid #ddd',
-            borderRadius: '4px',
-            fontSize: '1rem'
-          }}
-        />
-        {errors.unit && <span style={{ color: '#dc3545', fontSize: '0.875rem' }}>{errors.unit}</span>}
+        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Unit *</label>
+        <input type="text" name="unit" value={formData.unit} onChange={handleChange} placeholder="e.g., °C, kWh, %" style={fieldStyle(errors.unit)} />
+        {errors.unit && <span style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{errors.unit}</span>}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
         <div>
-          <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>
-            Min Value *
-          </label>
-          <input
-            type="number"
-            name="min_value"
-            value={formData.min_value}
-            onChange={handleChange}
-            step="any"
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              border: errors.min_value ? '1px solid #dc3545' : '1px solid #ddd',
-              borderRadius: '4px',
-              fontSize: '1rem'
-            }}
-          />
-          {errors.min_value && <span style={{ color: '#dc3545', fontSize: '0.875rem' }}>{errors.min_value}</span>}
+          <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Min Value *</label>
+          <input type="number" name="min_value" value={formData.min_value} onChange={handleChange} step="any" style={fieldStyle(errors.min_value)} />
+          {errors.min_value && <span style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{errors.min_value}</span>}
         </div>
-
         <div>
-          <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>
-            Max Value *
-          </label>
-          <input
-            type="number"
-            name="max_value"
-            value={formData.max_value}
-            onChange={handleChange}
-            step="any"
-            style={{
-              width: '100%',
-              padding: '0.5rem',
-              border: errors.max_value ? '1px solid #dc3545' : '1px solid #ddd',
-              borderRadius: '4px',
-              fontSize: '1rem'
-            }}
-          />
-          {errors.max_value && <span style={{ color: '#dc3545', fontSize: '0.875rem' }}>{errors.max_value}</span>}
+          <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Max Value *</label>
+          <input type="number" name="max_value" value={formData.max_value} onChange={handleChange} step="any" style={fieldStyle(errors.max_value)} />
+          {errors.max_value && <span style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{errors.max_value}</span>}
         </div>
       </div>
 
       <div style={{ marginBottom: '1rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>
-          Color *
-        </label>
+        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Color *</label>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <input
-            type="color"
-            name="color"
-            value={formData.color}
-            onChange={handleChange}
-            style={{
-              width: '60px',
-              height: '40px',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          />
-          <input
-            type="text"
-            name="color"
-            value={formData.color}
-            onChange={handleChange}
-            placeholder="#FF5733"
-            style={{
-              flex: 1,
-              padding: '0.5rem',
-              border: errors.color ? '1px solid #dc3545' : '1px solid #ddd',
-              borderRadius: '4px',
-              fontSize: '1rem'
-            }}
-          />
+          <input type="color" name="color" value={formData.color} onChange={handleChange} style={{ width: '60px', height: '40px', border: '1px solid var(--border)', borderRadius: '4px', cursor: 'pointer', backgroundColor: 'var(--input-bg)' }} />
+          <input type="text" name="color" value={formData.color} onChange={handleChange} placeholder="#FF5733" style={{ ...fieldStyle(errors.color), flex: 1 }} />
         </div>
-        {errors.color && <span style={{ color: '#dc3545', fontSize: '0.875rem' }}>{errors.color}</span>}
+        {errors.color && <span style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{errors.color}</span>}
+      </div>
+
+      <div style={{ marginBottom: '1rem' }}>
+        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Location</label>
+        <select name="location_id" value={formData.location_id} onChange={handleChange} style={fieldStyle(false)}>
+          <option value="">— No location —</option>
+          {flatLocations.map(loc => (
+            <option key={loc.id} value={loc.id}>
+              {'  '.repeat(loc.depth)}{loc.depth > 0 ? '└ ' : ''}{loc.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div style={{ marginBottom: '1rem' }}>
+        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Tags</label>
+        <TagInput value={formData.tags} onChange={(tags) => setFormData(prev => ({ ...prev, tags }))} />
+        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Press Enter or comma to add a tag</span>
       </div>
 
       <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.5rem' }}>
-        <button
-          type="submit"
-          disabled={submitting}
-          style={{
-            padding: '0.75rem 1.5rem',
-            backgroundColor: submitting ? '#6c757d' : '#28a745',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: submitting ? 'not-allowed' : 'pointer',
-            fontWeight: '500',
-            fontSize: '1rem'
-          }}
-        >
+        <button type="submit" disabled={submitting} className="btn btn-primary">
           {submitting ? 'Saving...' : series ? 'Update Series' : 'Create Series'}
         </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={submitting}
-          style={{
-            padding: '0.75rem 1.5rem',
-            backgroundColor: 'white',
-            color: '#333',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-            cursor: submitting ? 'not-allowed' : 'pointer',
-            fontSize: '1rem'
-          }}
-        >
+        <button type="button" onClick={onCancel} disabled={submitting} className="btn btn-outline">
           Cancel
         </button>
       </div>
