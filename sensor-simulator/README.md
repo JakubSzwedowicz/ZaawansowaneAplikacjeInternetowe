@@ -24,7 +24,7 @@ Edit `config.py` to configure sensors:
 Make sure the backend is running first:
 Then run the simulator:
 ```bash
-python simulator.py
+python3 simulator.py
 ```
 
 ## How It Works

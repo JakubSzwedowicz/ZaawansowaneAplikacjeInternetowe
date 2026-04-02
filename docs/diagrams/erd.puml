@@ -57,13 +57,8 @@ entity "sensors" as sensors {
 
 ' Relationships
 series ||--o{ measurements : "has many"
-measurements }o--|| series : "belongs to"
-
-sensors }o--|| series : "writes to"
-series ||--o{ sensors : "has many"
-
-sensors ||--o{ measurements : "creates"
-measurements }o--o| sensors : "created by\n(nullable)"
+series ||--o{ sensors : "belongs to series"
+sensors ||--o{ measurements : "creates\n(nullable)"
 
 note right of users
   **Roles:**
