@@ -46,10 +46,11 @@ export default function SearchPage() {
       <form onSubmit={handleSearch} style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
           <div style={{ flex: 1, minWidth: '200px' }}>
-            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500', color: 'var(--text)' }}>
+            <label htmlFor="search-q" style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500', color: 'var(--text)' }}>
               Search by name or description
             </label>
             <input
+              id="search-q"
               type="search"
               value={q}
               onChange={(e) => setQ(e.target.value)}
@@ -58,10 +59,11 @@ export default function SearchPage() {
             />
           </div>
           <div style={{ flex: 1, minWidth: '160px' }}>
-            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500', color: 'var(--text)' }}>
+            <label htmlFor="search-tag" style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500', color: 'var(--text)' }}>
               Filter by tag
             </label>
             <input
+              id="search-tag"
               type="text"
               value={tag}
               onChange={(e) => setTag(e.target.value)}

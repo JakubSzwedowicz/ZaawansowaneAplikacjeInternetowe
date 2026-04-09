@@ -77,124 +77,100 @@ export default function ProfilePage() {
     setSuccess('');
   };
 
-  return (
-    <div style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto' }}>
-      <h1>Profile Settings</h1>
+  const fieldStyle = (hasError) => ({
+    width: '100%',
+    padding: '0.5rem',
+    border: `1px solid ${hasError ? 'var(--danger)' : 'var(--border)'}`,
+    borderRadius: '4px',
+    fontSize: '1rem',
+    backgroundColor: 'var(--input-bg)',
+    color: 'var(--text)',
+  });
 
-      <div style={{ marginTop: '2rem', padding: '1.5rem', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #ddd' }}>
-        <h2 style={{ marginBottom: '1rem' }}>User Information</h2>
-        <div style={{ display: 'grid', gap: '0.75rem', fontSize: '0.95rem' }}>
-          <div>
-            <strong>Username:</strong> {user?.username}
-          </div>
-          <div>
-            <strong>Email:</strong> {user?.email}
-          </div>
-          <div>
-            <strong>Role:</strong> {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Viewer'}
-          </div>
+  return (
+    <div className="page-container" style={{ maxWidth: '600px' }}>
+      <h1 className="page-title">Profile Settings</h1>
+
+      <div className="card" style={{ marginBottom: '1.5rem' }}>
+        <h2 style={{ marginBottom: '1rem', color: 'var(--text)' }}>User Information</h2>
+        <div style={{ display: 'grid', gap: '0.75rem', fontSize: '0.95rem', color: 'var(--text)' }}>
+          <div><strong>Username:</strong> {user?.username}</div>
+          <div><strong>Email:</strong> {user?.email}</div>
+          <div><strong>Role:</strong> {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'Viewer'}</div>
         </div>
       </div>
 
-      <div style={{ marginTop: '2rem', padding: '1.5rem', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #ddd' }}>
-        <h2 style={{ marginBottom: '1rem' }}>Change Password</h2>
-        
+      <div className="card">
+        <h2 style={{ marginBottom: '1rem', color: 'var(--text)' }}>Change Password</h2>
+
         {errors.general && (
-          <div style={{ padding: '0.75rem', backgroundColor: '#f8d7da', color: '#721c24', borderRadius: '4px', marginBottom: '1rem' }}>
+          <div role="alert" className="alert alert-error" style={{ marginBottom: '1rem' }}>
             {errors.general}
           </div>
         )}
-        
+
         {success && (
-          <div style={{ padding: '0.75rem', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px', marginBottom: '1rem' }}>
+          <div role="alert" className="alert alert-success" style={{ marginBottom: '1rem' }}>
             {success}
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>
+            <label htmlFor="pp-current" style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500', color: 'var(--text)' }}>
               Current Password *
             </label>
             <input
+              id="pp-current"
               type="password"
               name="currentPassword"
               value={formData.currentPassword}
               onChange={handleChange}
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                border: errors.currentPassword ? '1px solid #dc3545' : '1px solid #ddd',
-                borderRadius: '4px',
-                fontSize: '1rem'
-              }}
+              style={fieldStyle(errors.currentPassword)}
             />
             {errors.currentPassword && (
-              <span style={{ color: '#dc3545', fontSize: '0.875rem' }}>{errors.currentPassword}</span>
+              <span role="alert" style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{errors.currentPassword}</span>
             )}
           </div>
 
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>
+            <label htmlFor="pp-new" style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500', color: 'var(--text)' }}>
               New Password *
             </label>
             <input
+              id="pp-new"
               type="password"
               name="newPassword"
               value={formData.newPassword}
               onChange={handleChange}
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                border: errors.newPassword ? '1px solid #dc3545' : '1px solid #ddd',
-                borderRadius: '4px',
-                fontSize: '1rem'
-              }}
+              style={fieldStyle(errors.newPassword)}
             />
             {errors.newPassword && (
-              <span style={{ color: '#dc3545', fontSize: '0.875rem' }}>{errors.newPassword}</span>
+              <span role="alert" style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{errors.newPassword}</span>
             )}
-            <span style={{ fontSize: '0.75rem', color: '#666', display: 'block', marginTop: '0.25rem' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem' }}>
               Must be at least 8 characters
             </span>
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>
+            <label htmlFor="pp-confirm" style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500', color: 'var(--text)' }}>
               Confirm New Password *
             </label>
             <input
+              id="pp-confirm"
               type="password"
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
-              style={{
-                width: '100%',
-                padding: '0.5rem',
-                border: errors.confirmPassword ? '1px solid #dc3545' : '1px solid #ddd',
-                borderRadius: '4px',
-                fontSize: '1rem'
-              }}
+              style={fieldStyle(errors.confirmPassword)}
             />
             {errors.confirmPassword && (
-              <span style={{ color: '#dc3545', fontSize: '0.875rem' }}>{errors.confirmPassword}</span>
+              <span role="alert" style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{errors.confirmPassword}</span>
             )}
           </div>
 
-          <button
-            type="submit"
-            disabled={submitting}
-            style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: submitting ? '#6c757d' : '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: submitting ? 'not-allowed' : 'pointer',
-              fontWeight: '500',
-              fontSize: '1rem'
-            }}
-          >
+          <button type="submit" disabled={submitting} className="btn btn-primary">
             {submitting ? 'Changing Password...' : 'Change Password'}
           </button>
         </form>

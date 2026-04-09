@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { format, subDays } from 'date-fns';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { dataService } from '../services/dataService';
 import MeasurementChart from '../components/charts/MeasurementChart';
 import MeasurementTable from '../components/tables/MeasurementTable';
@@ -10,6 +11,13 @@ import { useAuth } from '../context/AuthContext';
 export default function Dashboard() {
   const { isAdmin } = useAuth();
   const [searchParams] = useSearchParams();
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+
+  const { data: newContent } = useQuery({
+    queryKey: ['new-content'],
+    queryFn: dataService.getNewContent,
+    enabled: isAdmin,
+  });
   const [series, setSeries] = useState([]);
   const [measurements, setMeasurements] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -125,7 +133,7 @@ export default function Dashboard() {
             onClick={handlePrint}
             style={{
               padding: '0.5rem 1rem',
-              backgroundColor: '#28a745',
+              backgroundColor: '#146c2e',
               color: 'white',
               border: 'none',
               borderRadius: '4px',
@@ -136,22 +144,33 @@ export default function Dashboard() {
             🖨️ Print View
           </button>
           {isAdmin && (
-            <button 
+            <button
               onClick={() => window.location.href = '/manage'}
-              style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#007bff',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
+              className="btn btn-primary"
+              style={{ padding: '0.5rem 1rem' }}
             >
-              ⚙️ Manage Data
+              Manage Data
             </button>
           )}
         </div>
       </div>
+
+      {isAdmin && !bannerDismissed && newContent?.since && (newContent.series_count > 0 || newContent.measurements_count > 0) && (
+        <div role="alert" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', marginBottom: '1.5rem', backgroundColor: 'var(--primary)', color: '#fff', borderRadius: '4px', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <span>
+            <strong>New since your last login:</strong>{' '}
+            {newContent.series_count > 0 && `${newContent.series_count} series`}
+            {newContent.series_count > 0 && newContent.measurements_count > 0 && ', '}
+            {newContent.measurements_count > 0 && `${newContent.measurements_count} measurements`}
+          </span>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            <Link to="/admin" style={{ color: '#fff', fontWeight: '600', textDecoration: 'underline' }}>
+              Review in Admin panel →
+            </Link>
+            <button onClick={() => setBannerDismissed(true)} aria-label="Dismiss" style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '1.1rem', lineHeight: 1 }}>✕</button>
+          </div>
+        </div>
+      )}
 
       <div className="no-print">
         <FilterPanel

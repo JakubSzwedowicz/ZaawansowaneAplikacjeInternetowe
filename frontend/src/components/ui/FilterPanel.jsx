@@ -75,9 +75,10 @@ export default function FilterPanel({ series, selectedSeries, onSeriesChange, da
       <div style={{ marginBottom: '1.5rem' }}>
         <label style={{ fontWeight: '500', display: 'block', marginBottom: '0.75rem', color: 'var(--text)' }}>Date Range:</label>
         <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={inputStyle} />
-          <span style={{ color: 'var(--text-muted)' }}>to</span>
-          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} style={inputStyle} />
+          <label htmlFor="fp-start" style={{ fontSize: '0.875rem', color: 'var(--text)' }}>From</label>
+          <input id="fp-start" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={inputStyle} />
+          <label htmlFor="fp-end" style={{ fontSize: '0.875rem', color: 'var(--text)' }}>to</label>
+          <input id="fp-end" type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} style={inputStyle} />
           <button onClick={handleApplyDateRange} className="btn btn-primary" style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}>Apply</button>
         </div>
         <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
