@@ -1,23 +1,23 @@
-"""Extended schema: roles, locations, tags, metadata
+"""extended_schema
 
-Revision ID: b7c2d3f4a5e6
+Revision ID: 0c47ac9fbf80
 Revises: 9bf469006d12
-Create Date: 2026-04-02 12:00:00.000000
+Create Date: 2026-04-09 14:51:20.365351
 
 """
 from typing import Sequence, Union
+
 from alembic import op
 import sqlalchemy as sa
 
 
-revision: str = "b7c2d3f4a5e6"
-down_revision: Union[str, None] = "9bf469006d12"
+revision: str = '0c47ac9fbf80'
+down_revision: Union[str, None] = '9bf469006d12'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # locations table
     op.create_table(
         "locations",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -35,7 +35,6 @@ def upgrade() -> None:
     op.create_index(op.f("ix_locations_id"), "locations", ["id"], unique=False)
     op.create_index(op.f("ix_locations_parent_id"), "locations", ["parent_id"], unique=False)
 
-    # tags table
     op.create_table(
         "tags",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -48,7 +47,6 @@ def upgrade() -> None:
     op.create_index(op.f("ix_tags_id"), "tags", ["id"], unique=False)
     op.create_index(op.f("ix_tags_name"), "tags", ["name"], unique=True)
 
-    # series_tags association table
     op.create_table(
         "series_tags",
         sa.Column("series_id", sa.Integer(), nullable=False),
@@ -58,20 +56,16 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("series_id", "tag_id"),
     )
 
-    # extend users table
     op.add_column("users", sa.Column("role", sa.String(length=20), nullable=False, server_default="contributor"))
     op.add_column("users", sa.Column("is_blocked", sa.Boolean(), nullable=False, server_default="false"))
+    op.add_column("users", sa.Column("previous_login_at", sa.DateTime(timezone=True), nullable=True))
     op.add_column("users", sa.Column("last_login_at", sa.DateTime(timezone=True), nullable=True))
     op.create_index(op.f("ix_users_role"), "users", ["role"], unique=False)
 
-    # migrate is_admin → role
     op.execute("UPDATE users SET role = 'admin' WHERE is_admin = true")
     op.execute("UPDATE users SET role = 'contributor' WHERE is_admin = false")
-
-    # drop old is_admin column
     op.drop_column("users", "is_admin")
 
-    # extend series table
     op.add_column("series", sa.Column("location_id", sa.Integer(), nullable=True))
     op.add_column("series", sa.Column("creator_id", sa.Integer(), nullable=True))
     op.add_column("series", sa.Column("is_public", sa.Boolean(), nullable=False, server_default="true"))
@@ -80,7 +74,6 @@ def upgrade() -> None:
     op.create_index(op.f("ix_series_location_id"), "series", ["location_id"], unique=False)
     op.create_index(op.f("ix_series_creator_id"), "series", ["creator_id"], unique=False)
 
-    # extend measurements table
     op.add_column("measurements", sa.Column("note", sa.Text(), nullable=True))
     op.add_column("measurements", sa.Column("quality", sa.String(length=20), nullable=True))
     op.create_index(op.f("ix_measurements_quality"), "measurements", ["quality"], unique=False)
@@ -103,6 +96,7 @@ def downgrade() -> None:
     op.execute("UPDATE users SET is_admin = true WHERE role = 'admin'")
     op.drop_index(op.f("ix_users_role"), table_name="users")
     op.drop_column("users", "last_login_at")
+    op.drop_column("users", "previous_login_at")
     op.drop_column("users", "is_blocked")
     op.drop_column("users", "role")
 

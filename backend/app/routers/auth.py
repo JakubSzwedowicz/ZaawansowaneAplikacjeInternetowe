@@ -41,6 +41,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    user.previous_login_at = user.last_login_at
     user.last_login_at = datetime.utcnow()
     db.commit()
 

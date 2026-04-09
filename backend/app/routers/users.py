@@ -95,7 +95,7 @@ def unblock_user(user_id: int, db: Session = Depends(get_db), current_user: User
 def get_new_content(db: Session = Depends(get_db), current_user: User = Depends(get_current_admin)):
     from datetime import datetime, timedelta
 
-    since = current_user.last_login_at
+    since = current_user.previous_login_at
     if since is None:
         since = datetime.utcnow() - timedelta(hours=24)
 
