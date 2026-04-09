@@ -43,7 +43,8 @@ def get_all_series(
     creator_id: Optional[int] = Query(None),
     db: Session = Depends(get_db),
 ):
-    query = db.query(Series)
+    query = db.query(Series).outerjoin(User, Series.creator_id == User.id)
+    query = query.filter((Series.creator_id == None) | (User.is_blocked == False))
 
     if q:
         query = query.filter(

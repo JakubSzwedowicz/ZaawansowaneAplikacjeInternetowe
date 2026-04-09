@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format, subDays } from 'date-fns';
+import { useSearchParams } from 'react-router-dom';
 import { dataService } from '../services/dataService';
 import MeasurementChart from '../components/charts/MeasurementChart';
 import MeasurementTable from '../components/tables/MeasurementTable';
@@ -8,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 
 export default function Dashboard() {
   const { isAdmin } = useAuth();
+  const [searchParams] = useSearchParams();
   const [series, setSeries] = useState([]);
   const [measurements, setMeasurements] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,6 +19,7 @@ export default function Dashboard() {
     start: format(subDays(new Date(), 7), 'yyyy-MM-dd'),
     end: format(new Date(), 'yyyy-MM-dd')
   });
+  const [quality, setQuality] = useState(null);
   const [highlightedId, setHighlightedId] = useState(null);
 
   useEffect(() => {
@@ -36,8 +39,13 @@ export default function Dashboard() {
       // Ensure seriesData is an array
       if (Array.isArray(seriesData)) {
         setSeries(seriesData);
-        // Auto-select all series initially
-        setSelectedSeries(seriesData.map(s => s.id));
+        const seriesParam = searchParams.get('series');
+        if (seriesParam) {
+          const id = parseInt(seriesParam);
+          setSelectedSeries(seriesData.some(s => s.id === id) ? [id] : seriesData.map(s => s.id));
+        } else {
+          setSelectedSeries(seriesData.map(s => s.id));
+        }
       } else {
         console.error('Series data is not an array:', seriesData);
         setSeries([]);
@@ -103,8 +111,9 @@ export default function Dashboard() {
     return <div style={{ padding: '2rem', color: '#c00' }}>{error}</div>;
   }
 
-  const filteredMeasurements = measurements.filter(m => 
-    selectedSeries.includes(m.series_id)
+  const filteredMeasurements = measurements.filter(m =>
+    selectedSeries.includes(m.series_id) &&
+    (!quality || m.quality === quality)
   );
 
   return (
@@ -151,6 +160,8 @@ export default function Dashboard() {
           onSeriesChange={setSelectedSeries}
           dateRange={dateRange}
           onDateRangeChange={setDateRange}
+          quality={quality}
+          onQualityChange={setQuality}
         />
       </div>
 

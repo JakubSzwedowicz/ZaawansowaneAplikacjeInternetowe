@@ -21,6 +21,11 @@ def add_test_data():
     try:
         print("Adding test data...")
 
+        # Guard against running twice
+        if db.query(User).filter(User.username == "admin").first():
+            print("Test data already exists, skipping.")
+            return
+
         # Users
         print("Creating users...")
         admin = User(username="admin", email="admin@example.com", password_hash=get_password_hash("admin123"), role="admin")

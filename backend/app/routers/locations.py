@@ -11,7 +11,20 @@ router = APIRouter(prefix="/api/locations", tags=["Locations"])
 
 
 def build_tree(locations: List[Location]) -> List[LocationTree]:
-    by_id = {loc.id: LocationTree.model_validate(loc) for loc in locations}
+    by_id = {}
+    for loc in locations:
+        node = LocationTree(
+            id=loc.id,
+            name=loc.name,
+            description=loc.description,
+            parent_id=loc.parent_id,
+            slug=loc.slug,
+            display_order=loc.display_order,
+            created_at=loc.created_at,
+            updated_at=loc.updated_at,
+            children=[],
+        )
+        by_id[loc.id] = node
     roots = []
     for loc in locations:
         node = by_id[loc.id]

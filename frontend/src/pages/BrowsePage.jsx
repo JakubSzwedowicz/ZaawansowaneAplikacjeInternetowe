@@ -55,16 +55,18 @@ export default function BrowsePage() {
     queryFn: () => dataService.getSeries(currentLocationId ? { location_id: currentLocationId } : {}),
   });
 
-  const findLocation = (nodes, id) => {
+  const buildBreadcrumb = (nodes, targetId, path = []) => {
     for (const node of nodes) {
-      if (node.id === id) return node;
-      const found = findLocation(node.children || [], id);
+      const newPath = [...path, node];
+      if (node.id === targetId) return newPath;
+      const found = buildBreadcrumb(node.children || [], targetId, newPath);
       if (found) return found;
     }
     return null;
   };
 
-  const currentLocation = currentLocationId ? findLocation(locations, currentLocationId) : null;
+  const breadcrumb = currentLocationId ? buildBreadcrumb(locations, currentLocationId) : null;
+  const currentLocation = breadcrumb ? breadcrumb[breadcrumb.length - 1] : null;
 
   const handleLocationSelect = (id) => {
     navigate(`/browse/${id}`);
@@ -91,13 +93,22 @@ export default function BrowsePage() {
         </nav>
 
         <main>
-          {currentLocation && (
+          {breadcrumb && (
             <div style={{ marginBottom: '1.5rem' }}>
               <nav aria-label="Breadcrumb">
-                <ol style={{ listStyle: 'none', display: 'flex', gap: '0.5rem', flexWrap: 'wrap', fontSize: '0.875rem', color: 'var(--text-muted)' }}>
-                  <li><Link to="/browse">All</Link></li>
-                  <li aria-hidden>›</li>
-                  <li aria-current="page" style={{ color: 'var(--text)' }}>{currentLocation.name}</li>
+                <ol style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', gap: '0.35rem', flexWrap: 'wrap', fontSize: '0.875rem', alignItems: 'center' }}>
+                  <li><Link to="/browse" style={{ color: 'var(--primary)' }}>All</Link></li>
+                  {breadcrumb.map((loc, i) => (
+                    <span key={loc.id} style={{ display: 'contents' }}>
+                      <li aria-hidden style={{ color: 'var(--text-muted)' }}>›</li>
+                      <li aria-current={i === breadcrumb.length - 1 ? 'page' : undefined}>
+                        {i === breadcrumb.length - 1
+                          ? <span style={{ color: 'var(--text)' }}>{loc.name}</span>
+                          : <Link to={`/browse/${loc.id}`} style={{ color: 'var(--primary)' }}>{loc.name}</Link>
+                        }
+                      </li>
+                    </span>
+                  ))}
                 </ol>
               </nav>
               {currentLocation.description && (

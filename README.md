@@ -1,110 +1,160 @@
 # IoT Measurement Platform
 
-Smart home sensor data collection and visualization system.
+Community archive for collecting, browsing, and visualizing time-series sensor measurements. Supports hierarchical location browsing, tag-based search, three-theme UI (light/dark/high-contrast), and role-based access control.
 
 ## Tech Stack
 
-- **Backend**: FastAPI (Python 3.11)
+- **Backend**: FastAPI (Python 3.11) + SQLAlchemy + Alembic
 - **Database**: PostgreSQL 15
-- **Frontend**: React + Vite (coming soon)
+- **Frontend**: React 19 + Vite + React Query + Chart.js
 - **Deployment**: Docker Compose
 
 ## Quick Start
 
 ### Prerequisites
 
-- Docker and Docker Compose installed
-- Git
+- Docker and Docker Compose
 
-### Running the Application
+### Run
 
-1. Clone the repository and navigate to project directory
-
-2. Start the backend and database:
 ```bash
 docker-compose up -d
 ```
 
-3. Wait for services to start (check with `docker-compose logs -f`)
+Wait ~15 s for PostgreSQL to become healthy, then seed test data:
 
-4. Add test data:
 ```bash
-docker-compose exec backend python scripts/add_test_data.py
+docker-compose exec -T backend python scripts/add_test_data.py
 ```
 
-5. Access the API:
-   - API: http://localhost:8000
-   - Swagger Docs: http://localhost:8000/docs
-   - Interactive API testing: http://localhost:8000/docs
+| Service    | URL                          |
+|------------|------------------------------|
+| Frontend   | http://localhost:3000        |
+| Backend    | http://localhost:8000        |
+| Swagger UI | http://localhost:8000/docs   |
 
-### Test Credentials
+### Test Accounts
 
-**Admin User**:
-- Username: `admin`
-- Password: `admin123`
+| Username | Password   | Role        |
+|----------|------------|-------------|
+| admin    | admin123   | Admin       |
+| alice    | alice123   | Contributor |
+| bob      | bob123     | Contributor |
+| viewer   | viewer123  | Viewer      |
 
-**Note**: Unauthenticated users can view data without logging in. Only admins need to log in for CRUD operations.
+### Fresh Rebuild
 
-### API Overview
+If you need to wipe the database and start clean:
 
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login and get JWT token
-- `GET /api/series` - Get all measurement series
-- `GET /api/measurements` - Get measurements (with filters)
-- `POST /api/measurements` - Create measurement (admin only)
-- `POST /api/sensors/{id}/measurements` - Sensor data submission
+```bash
+docker-compose down -v
+docker-compose build --no-cache
+docker-compose up -d
+docker-compose exec -T backend python scripts/add_test_data.py
+```
 
-See full API documentation at `/docs` endpoint.
+## Roles
+
+| Role        | Capabilities |
+|-------------|--------------|
+| Viewer      | Browse locations, search by tag/keyword, view measurements and charts |
+| Contributor | All Viewer permissions + create/edit/delete own series and measurements |
+| Admin       | All Contributor permissions + manage all content, block users, view new-content feed |
+
+## Features
+
+- **Hierarchical browsing** — locations organized as a tree (building → floor → room); breadcrumb navigation
+- **Search & filter** — full-text search, tag filtering, date range, quality filter (good / uncertain / bad)
+- **Charts & tables** — time-series chart with point-click highlighting, cross-linked data table
+- **Themes** — light, dark, high-contrast; persisted in `localStorage`, respects `prefers-color-scheme`
+- **WCAG 2.1 AA** — skip link, semantic landmarks, `aria-*` attributes, sufficient contrast in all themes
+- **Sensor API** — hardware sensors push data via `X-API-Key` without JWT
+
+## API Overview
+
+### Public
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/series` | List series (supports `q`, `tag`, `location_id` filters) |
+| GET | `/api/measurements` | List measurements (supports `series_ids`, date range, `quality`) |
+| GET | `/api/locations` | Location tree |
+| GET | `/api/tags` | All tags |
+
+### Authenticated (JWT Bearer)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/register` | Register |
+| POST | `/api/auth/login` | Login → JWT token |
+| POST | `/api/series` | Create series (contributor+) |
+| PUT | `/api/series/{id}` | Update series (owner or admin) |
+| DELETE | `/api/series/{id}` | Delete series (owner or admin) |
+| POST | `/api/measurements` | Add measurement (owner or admin) |
+| PUT | `/api/measurements/{id}` | Edit measurement (owner or admin) |
+| DELETE | `/api/measurements/{id}` | Delete measurement (owner or admin) |
+| GET | `/api/users/me/new-content` | Content added since last login (admin) |
+| PATCH | `/api/users/{id}/block` | Block user (admin) |
+| PATCH | `/api/users/{id}/unblock` | Unblock user (admin) |
+
+### Sensor (API Key)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/sensors/{id}/measurements` | Push measurement via `X-API-Key` header |
 
 ## Development
 
-### Backend Setup (without Docker)
+### Backend (without Docker)
 
 ```bash
 cd backend
-python3 -m venv venv
-source venv/bin/activate
+cp .env.example .env.local   # fill in DATABASE_URL and SECRET_KEY
 pip install -r requirements.txt
-
-# Create .env file
-cp .env.example .env
-
-# Run migrations
 alembic upgrade head
-
-# Start server
 uvicorn app.main:app --reload
 ```
 
-### Database Migrations
+New migration after model changes:
 
 ```bash
-# Create new migration
 alembic revision --autogenerate -m "description"
-
-# Apply migrations
 alembic upgrade head
+```
 
-# Rollback
-alembic downgrade -1
+### Frontend (without Docker)
+
+```bash
+cd frontend
+npm install
+VITE_API_URL=http://localhost:8000/api npm run dev
+```
+
+### Sensor Simulator
+
+```bash
+cd sensor-simulator
+pip install -r requirements.txt
+python simulator.py
 ```
 
 ## Project Structure
 
 ```
-.
-├── backend/
-│   ├── app/
-│   │   ├── models/          # SQLAlchemy models
-│   │   ├── schemas/         # Pydantic schemas
-│   │   ├── routers/         # API endpoints
-│   │   ├── utils/           # Auth, security
-│   │   └── main.py          # FastAPI app
-│   ├── alembic/             # Database migrations
-│   ├── scripts/             # Utility scripts
-│   └── requirements.txt
-├── docs/
-│   └── diagrams/
-│       └── erd.puml         # Database ERD
-└── docker-compose.yml
+backend/
+  app/
+    routers/      # auth, series, measurements, sensors, locations, tags, users
+    models/       # User, Series, Measurement, Sensor, Location, Tag
+    schemas/      # Pydantic request/response schemas
+    utils/        # JWT, password hashing, FastAPI dependencies
+  alembic/        # DB migrations
+  scripts/        # add_test_data.py
+
+frontend/src/
+  context/        # AuthContext, ThemeContext
+  pages/          # Dashboard, BrowsePage, SearchPage, MySeriesPage, AdminPage, ...
+  components/     # charts, tables, forms, ui, layout
+  services/       # api.js (Axios), dataService.js, authService.js
+
+sensor-simulator/ # Python script that POSTs to sensor API
 ```
