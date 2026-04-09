@@ -184,47 +184,47 @@ export default function SeriesForm({ series, onSaved, onCancel }) {
   return (
     <form onSubmit={handleSubmit} style={{ maxWidth: '600px' }}>
       <div style={{ marginBottom: '1rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Name *</label>
-        <input type="text" name="name" value={formData.name} onChange={handleChange} style={fieldStyle(errors.name)} />
-        {errors.name && <span style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{errors.name}</span>}
+        <label htmlFor="sf-name" style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Name *</label>
+        <input id="sf-name" type="text" name="name" value={formData.name} onChange={handleChange} style={fieldStyle(errors.name)} />
+        {errors.name && <span role="alert" style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{errors.name}</span>}
       </div>
 
       <div style={{ marginBottom: '1rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Description</label>
-        <textarea name="description" value={formData.description} onChange={handleChange} rows="3" style={{ ...fieldStyle(false), fontFamily: 'inherit' }} />
+        <label htmlFor="sf-description" style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Description</label>
+        <textarea id="sf-description" name="description" value={formData.description} onChange={handleChange} rows="3" style={{ ...fieldStyle(false), fontFamily: 'inherit' }} />
       </div>
 
       <div style={{ marginBottom: '1rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Unit *</label>
-        <input type="text" name="unit" value={formData.unit} onChange={handleChange} placeholder="e.g., °C, kWh, %" style={fieldStyle(errors.unit)} />
-        {errors.unit && <span style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{errors.unit}</span>}
+        <label htmlFor="sf-unit" style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Unit *</label>
+        <input id="sf-unit" type="text" name="unit" value={formData.unit} onChange={handleChange} placeholder="e.g., °C, kWh, %" style={fieldStyle(errors.unit)} />
+        {errors.unit && <span role="alert" style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{errors.unit}</span>}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
         <div>
-          <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Min Value *</label>
-          <input type="number" name="min_value" value={formData.min_value} onChange={handleChange} step="any" style={fieldStyle(errors.min_value)} />
-          {errors.min_value && <span style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{errors.min_value}</span>}
+          <label htmlFor="sf-min" style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Min Value *</label>
+          <input id="sf-min" type="number" name="min_value" value={formData.min_value} onChange={handleChange} step="any" style={fieldStyle(errors.min_value)} />
+          {errors.min_value && <span role="alert" style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{errors.min_value}</span>}
         </div>
         <div>
-          <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Max Value *</label>
-          <input type="number" name="max_value" value={formData.max_value} onChange={handleChange} step="any" style={fieldStyle(errors.max_value)} />
-          {errors.max_value && <span style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{errors.max_value}</span>}
+          <label htmlFor="sf-max" style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Max Value *</label>
+          <input id="sf-max" type="number" name="max_value" value={formData.max_value} onChange={handleChange} step="any" style={fieldStyle(errors.max_value)} />
+          {errors.max_value && <span role="alert" style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{errors.max_value}</span>}
         </div>
       </div>
 
       <div style={{ marginBottom: '1rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Color *</label>
+        <label htmlFor="sf-color-text" style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Color *</label>
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <input type="color" name="color" value={formData.color} onChange={handleChange} style={{ width: '60px', height: '40px', border: '1px solid var(--border)', borderRadius: '4px', cursor: 'pointer', backgroundColor: 'var(--input-bg)' }} />
-          <input type="text" name="color" value={formData.color} onChange={handleChange} placeholder="#FF5733" style={{ ...fieldStyle(errors.color), flex: 1 }} />
+          <input type="color" name="color" aria-label="Pick color" value={formData.color} onChange={handleChange} style={{ width: '60px', height: '40px', border: '1px solid var(--border)', borderRadius: '4px', cursor: 'pointer', backgroundColor: 'var(--input-bg)' }} />
+          <input id="sf-color-text" type="text" name="color" value={formData.color} onChange={handleChange} placeholder="#FF5733" style={{ ...fieldStyle(errors.color), flex: 1 }} />
         </div>
-        {errors.color && <span style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{errors.color}</span>}
+        {errors.color && <span role="alert" style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{errors.color}</span>}
       </div>
 
       <div style={{ marginBottom: '1rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Location</label>
-        <select name="location_id" value={formData.location_id} onChange={handleChange} style={fieldStyle(false)}>
+        <label htmlFor="sf-location" style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Location</label>
+        <select id="sf-location" name="location_id" value={formData.location_id} onChange={handleChange} style={fieldStyle(false)}>
           <option value="">— No location —</option>
           {flatLocations.map(loc => (
             <option key={loc.id} value={loc.id}>
@@ -235,8 +235,10 @@ export default function SeriesForm({ series, onSaved, onCancel }) {
       </div>
 
       <div style={{ marginBottom: '1rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Tags</label>
+        <label htmlFor="sf-tags" style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Tags</label>
+        <div id="sf-tags">
         <TagInput value={formData.tags} onChange={(tags) => setFormData(prev => ({ ...prev, tags }))} />
+        </div>
         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Press Enter or comma to add a tag</span>
       </div>
 

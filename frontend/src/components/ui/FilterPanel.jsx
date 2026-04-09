@@ -1,26 +1,9 @@
 import { useState } from 'react';
 import { format, subDays } from 'date-fns';
-import { useQuery } from '@tanstack/react-query';
-import { dataService } from '../../services/dataService';
 
 export default function FilterPanel({ series, selectedSeries, onSeriesChange, dateRange, onDateRangeChange, onQualityChange, quality }) {
   const [startDate, setStartDate] = useState(dateRange.start || format(subDays(new Date(), 7), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(dateRange.end || format(new Date(), 'yyyy-MM-dd'));
-
-  const { data: locations = [] } = useQuery({
-    queryKey: ['locations'],
-    queryFn: dataService.getLocations,
-  });
-
-  const flattenLocations = (nodes, depth = 0) => {
-    let result = [];
-    for (const node of nodes) {
-      result.push({ ...node, depth });
-      if (node.children?.length) result = result.concat(flattenLocations(node.children, depth + 1));
-    }
-    return result;
-  };
-  const flatLocations = flattenLocations(locations);
 
   const handleSeriesToggle = (seriesId) => {
     if (selectedSeries.includes(seriesId)) {
@@ -120,22 +103,6 @@ export default function FilterPanel({ series, selectedSeries, onSeriesChange, da
         </div>
       )}
 
-      {flatLocations.length > 0 && (
-        <div>
-          <label style={{ fontWeight: '500', display: 'block', marginBottom: '0.5rem', color: 'var(--text)' }}>Location:</label>
-          <select
-            onChange={(e) => onSeriesChange && null}
-            style={{ ...inputStyle, width: 'auto', minWidth: '200px' }}
-          >
-            <option value="">All locations</option>
-            {flatLocations.map(loc => (
-              <option key={loc.id} value={loc.id}>
-                {'  '.repeat(loc.depth)}{loc.depth > 0 ? '└ ' : ''}{loc.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
     </div>
   );
 }

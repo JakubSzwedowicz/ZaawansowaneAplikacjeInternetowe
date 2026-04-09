@@ -41,6 +41,9 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    if user.is_blocked:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is blocked")
+
     user.previous_login_at = user.last_login_at
     user.last_login_at = datetime.utcnow()
     db.commit()

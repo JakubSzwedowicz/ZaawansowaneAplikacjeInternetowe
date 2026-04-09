@@ -52,7 +52,7 @@ function App() {
                 } />
 
                 <Route path="manage" element={
-                  <ProtectedRoute>
+                  <ProtectedRoute requireAdmin>
                     <ManagePage />
                   </ProtectedRoute>
                 } />

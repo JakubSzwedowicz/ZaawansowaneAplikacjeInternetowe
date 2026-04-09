@@ -104,11 +104,28 @@ def get_new_content(db: Session = Depends(get_db), current_user: User = Depends(
         db.query(Measurement).filter(Measurement.created_at > since).order_by(Measurement.created_at.desc()).limit(100).all()
     )
 
+    creator_ids = {s.creator_id for s in new_series if s.creator_id}
+    creators = {u.id: u for u in db.query(User).filter(User.id.in_(creator_ids)).all()} if creator_ids else {}
+
     return {
         "since": since,
         "series_count": len(new_series),
         "measurements_count": len(new_measurements),
-        "series": [{"id": s.id, "name": s.name, "unit": s.unit, "color": s.color, "created_at": s.created_at} for s in new_series],
+        "series": [
+            {
+                "id": s.id,
+                "name": s.name,
+                "unit": s.unit,
+                "color": s.color,
+                "created_at": s.created_at,
+                "creator": {
+                    "id": creators[s.creator_id].id,
+                    "username": creators[s.creator_id].username,
+                    "is_blocked": creators[s.creator_id].is_blocked,
+                } if s.creator_id and s.creator_id in creators else None,
+            }
+            for s in new_series
+        ],
         "measurements": [
             {"id": m.id, "series_id": m.series_id, "value": m.value, "timestamp": m.timestamp, "created_at": m.created_at}
             for m in new_measurements

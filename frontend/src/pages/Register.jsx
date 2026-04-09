@@ -38,10 +38,11 @@ export default function Register() {
 
           {['username', 'email', 'password', 'confirm'].map(field => (
             <div key={field} style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text)' }}>
+              <label htmlFor={`reg-${field}`} style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: 'var(--text)' }}>
                 {field === 'confirm' ? 'Confirm Password' : field.charAt(0).toUpperCase() + field.slice(1)}
               </label>
               <input
+                id={`reg-${field}`}
                 type={field === 'password' || field === 'confirm' ? 'password' : field === 'email' ? 'email' : 'text'}
                 name={field}
                 value={form[field]}

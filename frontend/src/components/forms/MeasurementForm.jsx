@@ -99,8 +99,9 @@ export default function MeasurementForm({ measurement, series, onSaved, onCancel
   return (
     <form onSubmit={handleSubmit} style={{ maxWidth: '600px' }}>
       <div style={{ marginBottom: '1rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Series *</label>
+        <label htmlFor="mf-series" style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Series *</label>
         <select
+          id="mf-series"
           name="series_id"
           value={formData.series_id}
           onChange={handleChange}
@@ -116,7 +117,7 @@ export default function MeasurementForm({ measurement, series, onSaved, onCancel
       </div>
 
       <div style={{ marginBottom: '1rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>
+        <label htmlFor="mf-value" style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>
           Value *{selectedSeries && (
             <span style={{ fontWeight: 'normal', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
               {' '}(Range: {selectedSeries.min_value} – {selectedSeries.max_value} {selectedSeries.unit})
@@ -124,6 +125,7 @@ export default function MeasurementForm({ measurement, series, onSaved, onCancel
           )}
         </label>
         <input
+          id="mf-value"
           type="number"
           name="value"
           value={formData.value}
@@ -135,14 +137,14 @@ export default function MeasurementForm({ measurement, series, onSaved, onCancel
       </div>
 
       <div style={{ marginBottom: '1rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Timestamp *</label>
-        <input type="datetime-local" name="timestamp" value={formData.timestamp} onChange={handleChange} style={fieldStyle(errors.timestamp)} />
+        <label htmlFor="mf-timestamp" style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Timestamp *</label>
+        <input id="mf-timestamp" type="datetime-local" name="timestamp" value={formData.timestamp} onChange={handleChange} style={fieldStyle(errors.timestamp)} />
         {errors.timestamp && <span style={{ color: 'var(--danger)', fontSize: '0.875rem' }}>{errors.timestamp}</span>}
       </div>
 
       <div style={{ marginBottom: '1rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Quality</label>
-        <select name="quality" value={formData.quality} onChange={handleChange} style={fieldStyle(false)}>
+        <label htmlFor="mf-quality" style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Quality</label>
+        <select id="mf-quality" name="quality" value={formData.quality} onChange={handleChange} style={fieldStyle(false)}>
           {QUALITY_OPTIONS.map(q => (
             <option key={q} value={q}>{q || '— Not set —'}</option>
           ))}
@@ -150,8 +152,8 @@ export default function MeasurementForm({ measurement, series, onSaved, onCancel
       </div>
 
       <div style={{ marginBottom: '1.5rem' }}>
-        <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Note</label>
-        <textarea name="note" value={formData.note} onChange={handleChange} rows="2" placeholder="Optional note..." style={{ ...fieldStyle(false), fontFamily: 'inherit', resize: 'vertical' }} />
+        <label htmlFor="mf-note" style={{ display: 'block', marginBottom: '0.25rem', fontWeight: '500' }}>Note</label>
+        <textarea id="mf-note" name="note" value={formData.note} onChange={handleChange} rows="2" placeholder="Optional note..." style={{ ...fieldStyle(false), fontFamily: 'inherit', resize: 'vertical' }} />
       </div>
 
       <div style={{ display: 'flex', gap: '0.5rem' }}>
